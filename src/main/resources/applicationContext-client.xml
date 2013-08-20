@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+	http://www.directwebremoting.org/schema/spring-dwr http://www.directwebremoting.org/schema/spring-dwr-2.0.xsd">
+
+	<bean id="scheduler" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list>
+				<ref local="msgPollingJob" />
+			</list> 
+		</property>
+	</bean>
+
+	<bean name="msgPollingTask" class="com.hbp.job.MsgPollingTask">
+		<property name="servers" value="localhost:9000" />
+		<property name="handler1001" ref="handler1001" />
+		<property name="handler1002" ref="handler1002" />
+	</bean>
+	
+	<bean name="handler1001" class="com.hbp.handler.ClientHandler1001">
+		<property name="msgSaver" ref="msgSaver" />
+	</bean>
+	
+	<bean name="handler1002" class="com.hbp.handler.ClientHandler1002">
+		<property name="msgSaver" ref="msgSaver" />
+	</bean>
+	
+	<bean name="msgSaver" class="com.hbp.job.MsgSaver">
+	</bean>
+	
+	<!-- 定时轮询任务  -->
+	<bean id="msgPollingJob" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail">
+			<bean class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+				<property name="targetObject" ref="msgPollingTask" />
+				<property name="targetMethod" value="polling" />
+			</bean>
+		</property>
+		<property name="cronExpression" value="0/10 * * * * ?" />
+	</bean>
+</beans>

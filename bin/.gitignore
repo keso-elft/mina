@@ -1,0 +1,9 @@
+/applicationContext-client.xml
+/applicationContext-hibernate.xml
+/applicationContext-mina.xml
+/applicationContext-resources.xml
+/applicationContext-service.xml
+/com
+/log4j.xml
+/mina.properties
+/system.properties
