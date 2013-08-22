@@ -5,6 +5,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.hbp.Constants;
+
 public class MinaMessage implements Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -19,9 +21,17 @@ public class MinaMessage implements Serializable {
 	 */
 	private Long waitQuenceId;
 	/**
-	 * 是否是请求
+	 * 结果码
 	 */
-	private boolean isRequest = false;
+	private int resultCode = 0;
+	/**
+	 * 收到消息类型,1:请求,2:通知,3:数据应答
+	 */
+	private int type = 0;
+	public final static int TYPE_REQUEST = 1;
+	public final static int TYPE_NOTIFICATION = 2;
+	public final static int TYPE_DATA_REPLY = 3;
+
 	/**
 	 * 消息参数
 	 */
@@ -52,8 +62,25 @@ public class MinaMessage implements Serializable {
 				}
 			}
 		}
-		if (getQN() != null)
-			setRequest(true);
+		initMsgType(msg);
+	}
+
+	/**
+	 * TODO 分析消息类型(简略实现)
+	 * 
+	 * @param msg
+	 */
+	private void initMsgType(String msg) {
+		if (getQN() != null && getCN() != null) {
+			type = TYPE_REQUEST;
+			for (String cn : Constants.NOTIFICATION_CN) {
+				if (getCN().equals(cn)) {
+					type = TYPE_NOTIFICATION;
+				}
+			}
+		} else if (getCN() != null && getCN().equals("9014")) {
+			type = TYPE_DATA_REPLY;
+		}
 	}
 
 	/**
@@ -158,12 +185,28 @@ public class MinaMessage implements Serializable {
 		this.CP = CP;
 	}
 
-	public void setRequest(boolean isRequest) {
-		this.isRequest = isRequest;
+	public void setType(int type) {
+		this.type = type;
+	}
+
+	public int getType() {
+		return type;
 	}
 
 	public boolean isRequest() {
-		return isRequest;
+		return type == TYPE_REQUEST;
+	}
+
+	public boolean isNotification() {
+		return type == TYPE_NOTIFICATION;
+	}
+
+	public boolean isDataReply() {
+		return type == TYPE_DATA_REPLY;
+	}
+
+	public boolean isSuccess() {
+		return resultCode == Constants.QN_SUCCESS;
 	}
 
 	public String getValue(String key) {
@@ -174,8 +217,18 @@ public class MinaMessage implements Serializable {
 		pto.put(key, value);
 	}
 
+	public void setResultCode(int resultCode) {
+		this.resultCode = resultCode;
+	}
+
+	public int getResultCode() {
+		return resultCode;
+	}
+
 	public static void main(String[] args) {
 		String msg = "QN=20040516010101001;ST=32;CN=1072;PW=123456;MN=8888888880000001;Flag=3;CP=&&PW=654321&&";
-		System.out.print(new MinaMessage(msg));
+		MinaMessage message = new MinaMessage(msg);
+		System.out.print(message);
+		System.out.print(message.getType());
 	}
 }

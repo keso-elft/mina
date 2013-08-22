@@ -20,17 +20,18 @@ public class Handler1011 implements MinaHandler {
 
 	public final static String EXE_RTN_CP_PATTERN = "QN=%s;ExeRtn=%d";
 
-	@Override
 	public List<MinaMessage> handleMsg(MinaMessage in) {
 
 		List<MinaMessage> result = new ArrayList<MinaMessage>();
 
-		// answerMsg
-		String systemTime = new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
-		String answerCp = String.format(UPLOAD_CP_PATTERN, in.getQN(), systemTime);
-		MinaMessage answerMsg = new MinaMessage(String.format(Constants.UPLOAD_RTN_PATTERN, in.getCN(), in.getPW(),
-				in.getMN(), answerCp));
-		result.add(answerMsg);
+		// service
+		String systemTime = getSystemTime();
+
+		// uploadMsg
+		String uploadCp = String.format(UPLOAD_CP_PATTERN, in.getQN(), systemTime);
+		MinaMessage uploadMsg = new MinaMessage(String.format(Constants.UPLOAD_RTN_PATTERN, in.getCN(), in.getPW(),
+				in.getMN(), uploadCp));
+		result.add(uploadMsg);
 
 		// exeRtnMsg
 		String exeRtnCp = String.format(EXE_RTN_CP_PATTERN, in.getQN(), Constants.EXE_SUCCESS);
@@ -39,6 +40,10 @@ public class Handler1011 implements MinaHandler {
 		result.add(exeRtnMsg);
 
 		return result;
+	}
+
+	private String getSystemTime() {
+		return new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
 	}
 
 	public static void main(String[] args) {

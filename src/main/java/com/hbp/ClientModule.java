@@ -9,7 +9,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.hbp.handler.Handler1011;
+import com.hbp.handler.Handler1012;
 import com.hbp.handler.Handler1072;
+import com.hbp.handler.Handler2011;
+import com.hbp.handler.Handler2021;
+import com.hbp.handler.Handler2051;
 
 public class ClientModule {
 
@@ -33,8 +37,13 @@ public class ClientModule {
 
 		client = new MinaClient();
 		client.setServer("127.0.0.1:1234");
-		client.addHandler("1072", new Handler1072());
+
 		client.addHandler("1011", new Handler1011());
+		client.addHandler("1012", new Handler1012());
+		client.addHandler("1072", new Handler1072());
+		client.addHandler("2011", new Handler2011());
+		client.addHandler("2021", new Handler2021());
+		client.addHandler("2051", new Handler2051());
 
 		processer = new MinaProcesser();
 		processer.setClient(client);

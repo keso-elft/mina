@@ -1,5 +1,6 @@
 package com.hbp;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -52,8 +53,13 @@ public class MinaProcesser {
 	}
 
 	private List<MinaMessage> dispatch(MinaMessage msg) {
+		List<MinaMessage> result = new ArrayList<MinaMessage>();
+
 		MinaHandler handler = client.getHandler(msg.getCN());
-		return handler.handleMsg(msg);
+		if (handler != null)
+			result = handler.handleMsg(msg);
+
+		return result;
 	}
 
 	public void stop() {

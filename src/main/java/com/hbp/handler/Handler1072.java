@@ -20,12 +20,30 @@ public class Handler1072 implements MinaHandler {
 
 	public final static String EXE_RTN_CP_PATTERN = "QN=%s;ExeRtn=%d";
 
-	@Override
 	public List<MinaMessage> handleMsg(MinaMessage in) {
 
 		List<MinaMessage> result = new ArrayList<MinaMessage>();
 
+		// service
 		String newPass = in.getCpPara("PW");
+		int exeRtn = setPassword(newPass);
+
+		// exeRtnMsg
+		String outCpContent = String.format(EXE_RTN_CP_PATTERN, in.getQN(), exeRtn);
+		MinaMessage exeRtnMsg = new MinaMessage(String.format(Constants.EXE_RTN_PATTERN, in.getPW(), in.getMN(),
+				outCpContent));
+		result.add(exeRtnMsg);
+
+		return result;
+	}
+
+	/**
+	 * 设置密码service
+	 * 
+	 * @param newPass
+	 * @return
+	 */
+	private int setPassword(String newPass) {
 		int exeRtn = Constants.EXE_SUCCESS;
 
 		try {
@@ -41,13 +59,7 @@ public class Handler1072 implements MinaHandler {
 			exeRtn = Constants.EXE_FAIL;
 			log.error("change password failure!", e);
 		}
-
-		String outCpContent = String.format(EXE_RTN_CP_PATTERN, in.getQN(), exeRtn);
-		MinaMessage exeRtnMsg = new MinaMessage(String.format(Constants.EXE_RTN_PATTERN, in.getPW(), in.getMN(),
-				outCpContent));
-		result.add(exeRtnMsg);
-
-		return result;
+		return exeRtn;
 	}
 
 	public static void main(String[] args) {

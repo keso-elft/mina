@@ -31,17 +31,17 @@ public class MinaClientHandlerAdapter extends IoHandlerAdapter {
 			MinaMessage msg = new MinaMessage((String) message);
 
 			try {
-				MinaMessage resp = this.returnMsg(msg);
+				MinaMessage resp = this.replyMsg(msg);
 				if (resp != null && session.isConnected()) {
 					session.write(resp);
+				}
+				// 只有验证成功且为请求消息才加入队列
+				if (resp != null && resp.isSuccess() && msg.isRequest()) {
+					dispatch2handler(msg);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
 				log.error("client message Received exception : " + e.getMessage() + e.getCause());
-			}
-
-			if (msg.isRequest()) {
-				dispatch2handler(msg);
 			}
 		}
 	}
@@ -52,11 +52,11 @@ public class MinaClientHandlerAdapter extends IoHandlerAdapter {
 	 * @param msg
 	 * @return
 	 */
-	public MinaMessage returnMsg(MinaMessage msg) {
+	public MinaMessage replyMsg(MinaMessage msg) {
 		MinaReceiver receiver = minaClient.getReceiver();
 		MinaMessage respMsg = null;
 		if (receiver != null) {
-			respMsg = receiver.returnMsg(msg);
+			respMsg = receiver.replyMsg(msg);
 		}
 
 		return respMsg;
