@@ -1,11 +1,12 @@
 package com.hbp.handler;
 
+import java.util.List;
+
 import com.hbp.message.MinaMessage;
 
 public interface MinaHandler {
-
 	/**
-	 * 处理消息函数，如果需要写返回消息，放入返回的消息即可, HandlerAdapter类里面会自动进行回写。
+	 * 后置处理消息并回复结果函数
 	 */
-	public MinaMessage handleMsg(MinaMessage msg);
+	public List<MinaMessage> handleMsg(MinaMessage in);
 }

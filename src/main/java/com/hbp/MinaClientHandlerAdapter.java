@@ -6,13 +6,12 @@ import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hbp.handler.MinaHandler;
 import com.hbp.message.MinaMessage;
+import com.hbp.receiver.MinaReceiver;
 
 public class MinaClientHandlerAdapter extends IoHandlerAdapter {
 
-	protected Logger log = LoggerFactory
-			.getLogger(MinaClientHandlerAdapter.class);
+	protected Logger log = LoggerFactory.getLogger(MinaClientHandlerAdapter.class);
 
 	private MinaClient minaClient;
 
@@ -32,44 +31,44 @@ public class MinaClientHandlerAdapter extends IoHandlerAdapter {
 			MinaMessage msg = new MinaMessage((String) message);
 
 			try {
-				MinaMessage resp = this.dispatchMsg(msg);
+				MinaMessage resp = this.returnMsg(msg);
 				if (resp != null && session.isConnected()) {
 					session.write(resp);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-				log.error("client message Received exception : "
-						+ e.getMessage() + e.getCause());
+				log.error("client message Received exception : " + e.getMessage() + e.getCause());
+			}
+
+			if (msg.isRequest()) {
+				dispatch2handler(msg);
 			}
 		}
 	}
 
 	/**
-	 * 分发消息
+	 * 回复消息
 	 * 
 	 * @param msg
 	 * @return
 	 */
-	public MinaMessage dispatchMsg(MinaMessage msg) {
-		MinaHandler handler = minaClient.getHandlerMap().get(msg.getCn());
+	public MinaMessage returnMsg(MinaMessage msg) {
+		MinaReceiver receiver = minaClient.getReceiver();
 		MinaMessage respMsg = null;
-		if (handler != null) {
-			respMsg = handler.handleMsg(msg);
-		}
-
-		if (msg.isSync() && msg.getWaitQuenceId() != null) {
-
-			Long waitQuenceId = minaClient.waitLock.get(msg.getWaitQuenceId());
-			if (waitQuenceId != null) {
-				synchronized (waitQuenceId) {
-					// 把返回结果放入queue中,供client进行查找
-					minaClient.waitQuence.put(waitQuenceId, msg);
-					waitQuenceId.notifyAll();
-				}
-			}
+		if (receiver != null) {
+			respMsg = receiver.returnMsg(msg);
 		}
 
 		return respMsg;
+	}
+
+	/**
+	 * 将待处理消息分发到处理器
+	 * 
+	 * @param msg
+	 */
+	public void dispatch2handler(MinaMessage msg) {
+		minaClient.getProcesser().put(msg);
 	}
 
 	public void sessionOpened(IoSession session) throws Exception {
@@ -84,20 +83,21 @@ public class MinaClientHandlerAdapter extends IoHandlerAdapter {
 		}
 	}
 
-	public void exceptionCaught(IoSession session, Throwable cause)
-			throws Exception {
+	public void exceptionCaught(IoSession session, Throwable cause) throws Exception {
 		cause.printStackTrace();
 		log.error("exceptionCaught : " + cause.getCause());
 	}
 
+	/**
+	 * 断线后自动重连
+	 */
 	public void sessionClosed(IoSession session) throws Exception {
 		minaClient.setServerIsRunning(false);
 		minaClient.autoConnect();
 		log.info("connection close : " + session.getRemoteAddress());
 	}
 
-	public void sessionIdle(IoSession session, IdleStatus status)
-			throws Exception {
+	public void sessionIdle(IoSession session, IdleStatus status) throws Exception {
 		log.debug("connection idle : " + session.getRemoteAddress());
 	}
 }

@@ -10,7 +10,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-
 import org.apache.mina.core.future.ConnectFuture;
 import org.apache.mina.core.service.IoHandler;
 import org.apache.mina.core.session.IoSession;
@@ -24,12 +23,13 @@ import org.slf4j.LoggerFactory;
 
 import com.hbp.handler.MinaHandler;
 import com.hbp.message.MinaMessage;
+import com.hbp.receiver.MinaReceiver;
 
 /**
  * 客户端连接类
  */
 public class MinaClient {
-//
+
 	protected Logger log = LoggerFactory.getLogger(MinaClient.class);
 
 	private NioSocketConnector socketConnector = null;
@@ -62,14 +62,24 @@ public class MinaClient {
 	Map<Long, Long> waitLock = new HashMap<Long, Long>();
 
 	/**
-	 * 所有处理器
+	 * 前置处理器
+	 */
+	MinaReceiver receiver = new MinaReceiver();
+
+	/**
+	 * 后置处理器
+	 */
+	MinaProcesser processer;
+
+	/**
+	 * 所有后置处理器MAP
 	 */
 	Map<String, MinaHandler> handlerMap = new HashMap<String, MinaHandler>();
 
 	/**
-	 * 重连等待时间,1分钟
+	 * TODO 重连等待时间,默认1分钟,测试改为1秒
 	 */
-	private long connectPeriod = 60 * 1000;
+	private long connectPeriod = 1000;
 
 	/**
 	 * 打开连接的超时设置,10s
@@ -142,27 +152,23 @@ public class MinaClient {
 		// 创建连接器
 		socketConnector = new NioSocketConnector();
 		socketConnector.setConnectTimeoutMillis(connectTimeout);
-		InetSocketAddress isa = new InetSocketAddress(hostport[0],
-				Integer.valueOf(hostport[1]));
+		InetSocketAddress isa = new InetSocketAddress(hostport[0], Integer.valueOf(hostport[1]));
 
 		// 添加过滤器
 		socketConnector.getFilterChain().addLast(
 				"codec",
-				new ProtocolCodecFilter(new TextLineCodecFactory(Charset
-						.forName(codec), LineDelimiter.WINDOWS.getValue(),
-						LineDelimiter.WINDOWS.getValue())));
+				new ProtocolCodecFilter(new TextLineCodecFactory(Charset.forName(codec), LineDelimiter.WINDOWS
+						.getValue(), LineDelimiter.WINDOWS.getValue())));
 		// socketConnector.getFilterChain().addLast("codec", new
 		// ProtocolCodecFilter(new ObjectSerializationCodecFactory()));
 		Executor executor = null;
 		if (isNewCachedThreadPool == true) {
 			executor = Executors.newCachedThreadPool();
 		} else {
-			executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize,
-					keepAliveTime, TimeUnit.SECONDS,
+			executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, TimeUnit.SECONDS,
 					new LinkedBlockingQueue<Runnable>(blockQueueCapacity));
 		}
-		socketConnector.getFilterChain().addLast("threadPool-client",
-				new ExecutorFilter(executor));
+		socketConnector.getFilterChain().addLast("threadPool-client", new ExecutorFilter(executor));
 
 		// 添加业务处理适配器
 		IoHandler handler = new MinaClientHandlerAdapter(this);
@@ -179,8 +185,7 @@ public class MinaClient {
 		}
 
 		ioSession = future.getSession();
-		log.debug("success connect @ " + server + ", session:"
-				+ ioSession.getId());
+		log.debug("success connect @ " + server + ", session:" + ioSession.getId());
 		return true;
 	}
 
@@ -311,6 +316,10 @@ public class MinaClient {
 		handlerMap.put(cn, handler);
 	}
 
+	public MinaHandler getHandler(String cn) {
+		return handlerMap.get(cn);
+	}
+
 	public long getConnectTimeout() {
 		return connectTimeout;
 	}
@@ -367,19 +376,27 @@ public class MinaClient {
 		this.codec = codec;
 	}
 
-	public Map<String, MinaHandler> getHandlerMap() {
-		return handlerMap;
-	}
-
-	public void setHandlerMap(Map<String, MinaHandler> handlerMap) {
-		this.handlerMap = handlerMap;
-	}
-
 	public void setConnectPeriod(long connectPeriod) {
 		this.connectPeriod = connectPeriod;
 	}
 
 	public long getConnectPeriod() {
 		return connectPeriod;
+	}
+
+	public MinaReceiver getReceiver() {
+		return receiver;
+	}
+
+	public void setReceiver(MinaReceiver receiver) {
+		this.receiver = receiver;
+	}
+
+	public MinaProcesser getProcesser() {
+		return processer;
+	}
+
+	public void setProcesser(MinaProcesser processer) {
+		this.processer = processer;
 	}
 }
