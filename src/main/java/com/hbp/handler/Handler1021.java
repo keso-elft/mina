@@ -55,7 +55,7 @@ public class Handler1021 implements MinaHandler {
 		Handler1021 handler = new Handler1021();
 		List<MinaMessage> list = handler
 				.handleMsg(new MinaMessage(
-						"QN=20040516010101001;ST=32;CN=1021;PW=123456;MN=88888880000001;Flag=3；CP=&&Polld=101;Polld=102...&&"));
+						"QN=20040516010101001;ST=32;CN=1021;PW=123456;MN=88888880000001;Flag=3;CP=&&Polld=101;Polld=102...&&"));
 		for (MinaMessage msg : list) {
 			System.out.println(msg);
 		}

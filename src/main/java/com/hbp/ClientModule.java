@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import com.hbp.handler.Handler1011;
 import com.hbp.handler.Handler1012;
 import com.hbp.handler.Handler1021;
+import com.hbp.handler.Handler1032;
 import com.hbp.handler.Handler1072;
 import com.hbp.handler.Handler2011;
 import com.hbp.handler.Handler2021;
@@ -46,6 +47,7 @@ public class ClientModule {
 		client.addHandler("2021", new Handler2021());
 		client.addHandler("2051", new Handler2051());
 		client.addHandler("1021", new Handler1021());
+		client.addHandler("1032", new Handler1032());
 
 		processer = new MinaProcesser();
 		processer.setClient(client);
