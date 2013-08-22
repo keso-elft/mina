@@ -1,4 +1,4 @@
-package com.hbp;
+﻿package com.hbp;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
@@ -28,7 +28,7 @@ import com.hbp.message.MinaMessage;
  * 客户端连接类
  */
 public class MinaClient {
-
+//
 	protected Logger log = LoggerFactory.getLogger(MinaClient.class);
 
 	private NioSocketConnector socketConnector = null;
