@@ -1,8 +1,11 @@
 package com.hbp.message;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.hbp.Constants;
@@ -39,6 +42,8 @@ public class MinaMessage implements Serializable {
 	private String CP;
 	private Map<String, String> cpParaMap;
 
+	private int rtnFlag = 0;
+
 	/**
 	 * 构造器
 	 * 
@@ -66,7 +71,7 @@ public class MinaMessage implements Serializable {
 	}
 
 	/**
-	 * TODO 分析消息类型(简略实现)
+	 * 分析消息类型(简略实现)
 	 * 
 	 * @param msg
 	 */
@@ -103,13 +108,14 @@ public class MinaMessage implements Serializable {
 	}
 
 	/**
-	 * 创建CP参数集
+	 * 创建CP参数集,按逗号和分号分隔
 	 */
 	private void initCpParaMap() {
 		cpParaMap = new LinkedHashMap<String, String>();
 		if (CP != null && CP.length() > 0) {
-			String[] cpParas = CP.split(";");
-			for (String cpPara : cpParas) {
+			StringTokenizer st = new StringTokenizer(CP, ",;");
+			while (st.hasMoreTokens()) {
+				String cpPara = st.nextToken();
 				if (cpPara.matches("^.*=.*$")) {
 					String key = cpPara.substring(0, cpPara.indexOf("="));
 					String value = cpPara.substring(cpPara.indexOf("=") + 1);
@@ -117,6 +123,29 @@ public class MinaMessage implements Serializable {
 				}
 			}
 		}
+	}
+
+	/**
+	 * 分包
+	 */
+	public List<MinaMessage> subMessages() {
+		List<MinaMessage> subMessages = new ArrayList<MinaMessage>();
+
+		int pnum = CP.length() / Constants.PACKAGE_CP_SIZE + 1;
+		if (CP.length() % Constants.PACKAGE_CP_SIZE == 0)
+			pnum = pnum - 1;
+
+		for (int i = 0; i < pnum; i++) {
+			MinaMessage temp = new MinaMessage(this.toString());
+			String subCP = CP.substring(Constants.PACKAGE_CP_SIZE * i, CP.length() < Constants.PACKAGE_CP_SIZE
+					* (i + 1) ? CP.length() : Constants.PACKAGE_CP_SIZE * (i + 1));
+			temp.setValue("PNO", String.valueOf(i + 1));
+			temp.setValue("PNUM", String.valueOf(pnum));
+			temp.setCP(subCP);
+			subMessages.add(temp);
+		}
+
+		return subMessages;
 	}
 
 	/**
@@ -225,10 +254,28 @@ public class MinaMessage implements Serializable {
 		return resultCode;
 	}
 
+	public void setRtnFlag(int rtnFlag) {
+		this.rtnFlag = rtnFlag;
+	}
+
+	public int getRtnFlag() {
+		return rtnFlag;
+	}
+
 	public static void main(String[] args) {
 		String msg = "QN=20040516010101001;ST=32;CN=1072;PW=123456;MN=8888888880000001;Flag=3;CP=&&PW=654321&&";
 		MinaMessage message = new MinaMessage(msg);
-		System.out.print(message);
-		System.out.print(message.getType());
+		System.out.println(message);
+		System.out.println(message.getType());
+
+		System.out.println("----------------");
+
+		String msgTotal = "ST=32;CN=2051;QN=20040516010101001;PW=123456;MN=88888880000001;PNO=1;PNUM=1;CP=&&DataTime=20040516021000;B01-Cou=200;101-Cou=2.5,101-Min=1.1,101-Avg=1.1,101-Max=1.1;102-Cou=2.5,102-Min=2.1,102-Avg=2.1,102-Max=2.1&&";
+		MinaMessage messageTotal = new MinaMessage(msgTotal);
+		List<MinaMessage> messages = messageTotal.subMessages();
+		for (MinaMessage temp : messages) {
+			System.out.println(temp);
+			System.out.println(temp.getType());
+		}
 	}
 }

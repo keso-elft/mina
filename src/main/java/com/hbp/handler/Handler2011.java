@@ -29,10 +29,9 @@ public class Handler2011 implements MinaHandler {
 	}
 
 	/**
-	 * 获取实时数据
+	 * TODO 获取实时数据
 	 */
 	private String getRealTimeData() {
-		// TODO 待现场数据
 		return "DataTime=20040516010101011;B01-Rtd=100;101-Rtd=1.1,101-Flag=N;102-Rtd=2.2,102-Flag=N...";
 	}
 

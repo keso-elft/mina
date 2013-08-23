@@ -29,10 +29,9 @@ public class Handler2021 implements MinaHandler {
 	}
 
 	/**
-	 * 获取设施运行状态
+	 * TODO 获取设施运行状态
 	 */
 	private String getSBs() {
-		// TODO 待现场数据
 		return "DataTime=20040516010101011;SB1-RS=1;SB2-RS=0...";
 	}
 

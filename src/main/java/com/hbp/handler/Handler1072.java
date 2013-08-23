@@ -38,10 +38,7 @@ public class Handler1072 implements MinaHandler {
 	}
 
 	/**
-	 * 设置密码service
-	 * 
-	 * @param newPass
-	 * @return
+	 * TODO 设置密码
 	 */
 	private int setPassword(String newPass) {
 		int exeRtn = Constants.EXE_SUCCESS;

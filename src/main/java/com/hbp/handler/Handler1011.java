@@ -42,8 +42,11 @@ public class Handler1011 implements MinaHandler {
 		return result;
 	}
 
+	/**
+	 * TODO 取现场机系统时间
+	 */
 	private String getSystemTime() {
-		return new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
+		return new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
 	}
 
 	public static void main(String[] args) {

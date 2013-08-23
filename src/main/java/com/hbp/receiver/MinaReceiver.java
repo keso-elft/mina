@@ -24,6 +24,7 @@ public class MinaReceiver {
 
 		if (in.isRequest()) {
 
+			// 确定回复的QnRtn
 			int qnRtn = Constants.QN_SUCCESS;
 
 			if (!in.getPW().equals(System.getProperty("system.password"))) {
@@ -33,8 +34,16 @@ public class MinaReceiver {
 					|| client.getHandler(in.getCN()) == null)
 				qnRtn = Constants.QN_DENY;
 
-			rtnMsg = new MinaMessage(String.format(Constants.REPLY_REQUEST_PATTERN, in.getPW(), in.getMN(), in.getQN(),
-					qnRtn));
+			// TODO 确定回复的FLAG
+			int rtnFlag = 0;
+			// TODO 测试用
+			if (in.getCN().equals("2051"))
+				rtnFlag = 3;
+
+			in.setRtnFlag(rtnFlag);
+
+			rtnMsg = new MinaMessage(String.format(Constants.REPLY_REQUEST_PATTERN, in.getPW(), in.getMN(), rtnFlag,
+					in.getQN(), qnRtn));
 			rtnMsg.setResultCode(qnRtn);
 
 		} else if (in.isNotification()) {
@@ -54,7 +63,7 @@ public class MinaReceiver {
 			if (sourceMsg != null) {
 				rtnMsg = new MinaMessage(String.format(Constants.REPLY_DATA_REPLY_PATTERN, sourceMsg.getPW(),
 						sourceMsg.getMN(), sourceMsg.getQN(), exeRtn));
-				// 删除缓存数据
+				// TODO 删除缓存数据
 				client.removeHasReplyMsg(QN);
 			} else {
 				exeRtn = Constants.EXE_NO_DATA;

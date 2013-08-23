@@ -11,11 +11,16 @@ import org.slf4j.LoggerFactory;
 import com.hbp.handler.Handler1011;
 import com.hbp.handler.Handler1012;
 import com.hbp.handler.Handler1021;
+import com.hbp.handler.Handler1022;
 import com.hbp.handler.Handler1032;
 import com.hbp.handler.Handler1072;
 import com.hbp.handler.Handler2011;
 import com.hbp.handler.Handler2021;
+import com.hbp.handler.Handler2031;
+import com.hbp.handler.Handler2041;
 import com.hbp.handler.Handler2051;
+import com.hbp.handler.Handler2071;
+import com.hbp.handler.Handler2072;
 
 public class ClientModule {
 
@@ -45,6 +50,12 @@ public class ClientModule {
 		client.addHandler("2011", new Handler2011());
 		client.addHandler("2021", new Handler2021());
 		client.addHandler("2051", new Handler2051());
+		client.addHandler("2031", new Handler2031());
+		client.addHandler("2041", new Handler2041());
+		client.addHandler("2071", new Handler2071());
+		client.addHandler("2072", new Handler2072());
+		client.addHandler("1022", new Handler1022());
+
 		client.addHandler("1021", new Handler1021());
 		client.addHandler("1032", new Handler1032());
 

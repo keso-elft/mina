@@ -36,6 +36,9 @@ public class Handler1012 implements MinaHandler {
 		return result;
 	}
 
+	/**
+	 * TODO 设置系统时间
+	 */
 	private int setSystemTime(String systemTime) {
 		int exeRtn = Constants.EXE_SUCCESS;
 
