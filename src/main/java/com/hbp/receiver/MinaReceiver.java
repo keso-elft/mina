@@ -3,6 +3,7 @@ package com.hbp.receiver;
 import com.hbp.ClientModule;
 import com.hbp.Constants;
 import com.hbp.MinaClient;
+import com.hbp.handler.Handler1072;
 import com.hbp.message.MinaMessage;
 
 public class MinaReceiver {
@@ -25,11 +26,12 @@ public class MinaReceiver {
 
 			int qnRtn = Constants.QN_SUCCESS;
 
-			// TODO 需要放在之前判断
 			if (!in.getPW().equals(System.getProperty("system.password"))) {
 				qnRtn = Constants.QN_WRONG_PASS;
 			}
-			// TODO 无处理QN_DENY
+			if (in.getQN() == null || in.getMN() == null || in.getCN() == null || client == null
+					|| client.getHandler(in.getCN()) == null)
+				qnRtn = Constants.QN_DENY;
 
 			rtnMsg = new MinaMessage(String.format(Constants.REPLY_REQUEST_PATTERN, in.getPW(), in.getMN(), in.getQN(),
 					qnRtn));
@@ -37,7 +39,7 @@ public class MinaReceiver {
 
 		} else if (in.isNotification()) {
 
-			// TODO 无错误处理
+			// 不判断密码/成功失败
 			rtnMsg = new MinaMessage(String.format(Constants.REPLY_NOTIFICATION_PATTERN, in.getPW(), in.getMN(),
 					in.getQN()));
 
@@ -66,14 +68,15 @@ public class MinaReceiver {
 
 	public static void main(String[] args) {
 
+		ClientModule module = new ClientModule();
+		module.loadProperties();
+
 		MinaClient client = new MinaClient("");
 		MinaReceiver receiver = client.getReceiver();
 
 		client.putHasReplyMsg(new MinaMessage(
 				"QN=20040516010101001;ST=32;CN=2011;PW=123456;MN=8888888880000001;Flag=3;CP=&&&&"));
-
-		ClientModule module = new ClientModule();
-		module.loadProperties();
+		client.addHandler("1072", new Handler1072());
 
 		// 正确结果
 		// ST=91;CN=9011;PW=123456;MN=8888888880000001;Flag=0;CP=&&QN=20040516010101001;QnRtn=1&&
