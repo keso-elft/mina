@@ -20,6 +20,11 @@ public class MinaProcesser {
 
 	boolean isStop = false;
 
+	public MinaProcesser(MinaClient client) {
+		super();
+		this.client = client;
+	}
+
 	public boolean put(MinaMessage obj) {
 		return cache.offer(obj);
 	}

@@ -78,7 +78,7 @@ public class MinaMessage implements Serializable {
 					type = TYPE_NOTIFICATION;
 				}
 			}
-		} else if (getCN() != null && getCN().equals("9014")) {
+		} else if (getCN() != null && getCN().equals(Constants.DATA_REPLY_CN)) {
 			type = TYPE_DATA_REPLY;
 		}
 	}

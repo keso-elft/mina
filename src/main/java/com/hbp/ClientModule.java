@@ -37,8 +37,7 @@ public class ClientModule {
 	public void init() {
 		loadProperties();
 
-		client = new MinaClient();
-		client.setServer("127.0.0.1:1234");
+		client = new MinaClient("127.0.0.1:1234");
 
 		client.addHandler("1011", new Handler1011());
 		client.addHandler("1012", new Handler1012());
@@ -49,10 +48,7 @@ public class ClientModule {
 		client.addHandler("1021", new Handler1021());
 		client.addHandler("1032", new Handler1032());
 
-		processer = new MinaProcesser();
-		processer.setClient(client);
-
-		client.setProcesser(processer);
+		processer = client.getProcesser();
 	}
 
 	public void loadProperties() {

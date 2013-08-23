@@ -62,14 +62,19 @@ public class MinaClient {
 	Map<Long, Long> waitLock = new HashMap<Long, Long>();
 
 	/**
+	 * 有数据应答的消息队列(QN,message)
+	 */
+	Map<String, MinaMessage> hasReplyMsgMap = new HashMap<String, MinaMessage>();
+
+	/**
 	 * 前置处理器
 	 */
-	MinaReceiver receiver = new MinaReceiver();
+	MinaReceiver receiver = new MinaReceiver(this);
 
 	/**
 	 * 后置处理器
 	 */
-	MinaProcesser processer;
+	MinaProcesser processer = new MinaProcesser(this);
 
 	/**
 	 * 所有后置处理器MAP
@@ -77,9 +82,9 @@ public class MinaClient {
 	Map<String, MinaHandler> handlerMap = new HashMap<String, MinaHandler>();
 
 	/**
-	 * TODO 重连等待时间,默认1分钟,测试改为1秒
+	 * 重连等待时间,默认1分钟
 	 */
-	private long connectPeriod = 1000;
+	private long connectPeriod = 60 * 1000;
 
 	/**
 	 * 打开连接的超时设置,10s
@@ -92,13 +97,23 @@ public class MinaClient {
 	private long syncTimeOut = 10000;
 
 	/**
-	 * 其他各项配置
+	 * 默认编码
 	 */
 	String codec = "UTF-8";
+
+	/**
+	 * 线程池配置
+	 */
 	int corePoolSize = 10;
 	int maximumPoolSize = 100;
 	int blockQueueCapacity = 65535;
 	long keepAliveTime = 60;
+
+	public MinaClient(String server) {
+		super();
+		this.server = server;
+		init();
+	}
 
 	/**
 	 * 自动重连
@@ -159,8 +174,6 @@ public class MinaClient {
 				"codec",
 				new ProtocolCodecFilter(new TextLineCodecFactory(Charset.forName(codec), LineDelimiter.WINDOWS
 						.getValue(), LineDelimiter.WINDOWS.getValue())));
-		// socketConnector.getFilterChain().addLast("codec", new
-		// ProtocolCodecFilter(new ObjectSerializationCodecFactory()));
 		Executor executor = null;
 		if (isNewCachedThreadPool == true) {
 			executor = Executors.newCachedThreadPool();
@@ -187,6 +200,19 @@ public class MinaClient {
 		ioSession = future.getSession();
 		log.debug("success connect @ " + server + ", session:" + ioSession.getId());
 		return true;
+	}
+
+	/**
+	 * 根据配置文件初始化
+	 */
+	public void init() {
+		connectPeriod = System.getProperty("client.connect.period") != null ? new Long(
+				System.getProperty("client.connect.period")) : connectPeriod;
+		connectTimeout = System.getProperty("client.connect.timeout") != null ? new Long(
+				System.getProperty("client.connect.timeout")) : connectTimeout;
+		syncTimeOut = System.getProperty("client.sync.send.timeout") != null ? new Long(
+				System.getProperty("client.sync.send.timeout")) : syncTimeOut;
+		codec = System.getProperty("client.codec") != null ? System.getProperty("client.codec") : codec;
 	}
 
 	/**
@@ -398,5 +424,17 @@ public class MinaClient {
 
 	public void setProcesser(MinaProcesser processer) {
 		this.processer = processer;
+	}
+
+	public MinaMessage getHasReplyMsg(String QN) {
+		return hasReplyMsgMap.get(QN);
+	}
+
+	public void putHasReplyMsg(MinaMessage msg) {
+		hasReplyMsgMap.put(msg.getQN(), msg);
+	}
+
+	public void removeHasReplyMsg(String QN) {
+		hasReplyMsgMap.remove(QN);
 	}
 }

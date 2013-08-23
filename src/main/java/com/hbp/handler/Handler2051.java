@@ -40,7 +40,7 @@ public class Handler2051 implements MinaHandler {
 	/**
 	 * 获取设施运行状态
 	 */
-	private String getMinsData(String beginTimeAndendTime) {
+	private String getMinsData(String beginTimeAndEndTime) {
 		// TODO 待现场数据
 		return "DataTime=20040516010101011;B01-Cou=200;101-Cou=2.5,101-Min=1.1,101-Avg=1.1,101-Max=1.1;102-Cou=2.5,102-Min=2.1,102-Avg=2.1,102-Max=2.1...";
 	}
