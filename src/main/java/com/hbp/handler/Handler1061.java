@@ -10,26 +10,27 @@ import com.hbp.Constants;
 import com.hbp.message.MinaMessage;
 
 /**
- * 提取数据上报时间
- * <--- QN=20040516010101001;ST=32;CN=1041;PW=123456;MN=88888880000001;Flag=3;CP=&&&&
+ * <--- QN=20040516010101001;ST=32;CN=1061;PW=123456;MN=88888880000001;Flag=3;CP=&&&&
  * ---> ST=91;CN=9011;PW=123456;MN=88888880000001;Flag=0;CP=&&QN=20040516010101001;QnRtn=1&&
- * ---> ST=32;CN=1041;PW=123456;MN=88888880000001;CP=&&QN=200405060101001;ReprotTime=0101&
+ * ---> ST=32;CN=1061;PW=123456;MN=88888880000001;CP=&&QN=20040516010101001;RtdInterval=30&&
  * ---> ST=91;CN=9012;PW=123456;MN=88888880000001;CP=&&QN=20040516010101001;ExeRtn=1&&
  * @author Administrator
  *
  */
-public class Handler1041 implements MinaHandler{
+public class Handler1061 implements MinaHandler{
 
-	protected Logger log = LoggerFactory.getLogger(Handler1041.class);
+	protected Logger log = LoggerFactory.getLogger(Handler1061.class);
 	public final static String EXE_RTN_CP_PATTERN = "QN=%s;ExeRtn=%d";
 	
 	@Override
 	public List<MinaMessage> handleMsg(MinaMessage in) {
+		
 		List<MinaMessage> result = new ArrayList<MinaMessage>();
-		String reportTime = getReportTime();
+		String interval = getRtdInterval();
+		// uploadMsg
 		MinaMessage uploadMsg = new MinaMessage(String.format(
 				Constants.UPLOAD_RTN_PATTERN, in.getCN(), in.getPW(),
-				in.getMN(), reportTime));
+				in.getMN(), interval));
 		result.add(uploadMsg);
 		
 		// exeRtnMsg
@@ -41,16 +42,20 @@ public class Handler1041 implements MinaHandler{
 		return result;
 	}
 
-	private String getReportTime() {
+	/**
+	 * RETURN RTD INTERVAL
+	 * @return
+	 */
+	private String getRtdInterval() {
 		// TODO Auto-generated method stub
-		return "ReportTime=0101";
+		return "RtdInterval=30";
 	}
-
+	
 	public static void main(String[] args) {
-		Handler1041 handler = new Handler1041();
+		Handler1061 handler = new Handler1061();
 		List<MinaMessage> list = handler
 				.handleMsg(new MinaMessage(
-						"QN=20040516010101001;ST=32;CN=1041;PW=123456;MN=88888880000001;Flag=3;CP=&&&&"));
+						"QN=20040516010101001;ST=32;CN=1061;PW=123456;MN=88888880000001;Flag=3;CP=&&&&"));
 		for (MinaMessage msg : list) {
 			System.out.println(msg);
 		}

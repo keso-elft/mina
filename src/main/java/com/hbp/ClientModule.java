@@ -8,11 +8,18 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.hbp.handler.Handler1000;
+import com.hbp.handler.Handler1001;
 import com.hbp.handler.Handler1011;
 import com.hbp.handler.Handler1012;
 import com.hbp.handler.Handler1021;
 import com.hbp.handler.Handler1022;
+import com.hbp.handler.Handler1031;
 import com.hbp.handler.Handler1032;
+import com.hbp.handler.Handler1041;
+import com.hbp.handler.Handler1042;
+import com.hbp.handler.Handler1061;
+import com.hbp.handler.Handler1062;
 import com.hbp.handler.Handler1072;
 import com.hbp.handler.Handler2011;
 import com.hbp.handler.Handler2021;
@@ -21,6 +28,9 @@ import com.hbp.handler.Handler2041;
 import com.hbp.handler.Handler2051;
 import com.hbp.handler.Handler2071;
 import com.hbp.handler.Handler2072;
+import com.hbp.handler.Handler3011;
+import com.hbp.handler.Handler3012;
+import com.hbp.handler.Handler3014;
 
 public class ClientModule {
 
@@ -58,7 +68,16 @@ public class ClientModule {
 
 		client.addHandler("1021", new Handler1021());
 		client.addHandler("1032", new Handler1032());
-
+		client.addHandler("1031", new Handler1031());
+		client.addHandler("1042", new Handler1042());
+		client.addHandler("1041", new Handler1041());
+		client.addHandler("3011", new Handler3011());
+		client.addHandler("1062", new Handler1062());
+		client.addHandler("1061", new Handler1061());
+		client.addHandler("1000", new Handler1000());
+		client.addHandler("1001", new Handler1001());
+		client.addHandler("3012", new Handler3012());
+		client.addHandler("3014", new Handler3014());
 		processer = client.getProcesser();
 	}
 
