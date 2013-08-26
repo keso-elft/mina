@@ -116,6 +116,10 @@ public class ClientModule {
 
 	public static void main(String[] args) {
 		ClientModule module = new ClientModule();
-		module.start("127.0.0.1:1234");
+		if (args.length == 1) {
+			module.start(args[0]);
+		} else if (args.length == 0) {
+			module.start();
+		}
 	}
 }
