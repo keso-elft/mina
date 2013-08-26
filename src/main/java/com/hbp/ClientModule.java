@@ -36,23 +36,31 @@ public class ClientModule {
 
 	protected Logger log = LoggerFactory.getLogger(ClientModule.class);
 
-	MinaClient client;
-
-	MinaProcesser processer;
-
 	/**
-	 * 启动
+	 * 按照列表,多server启动
 	 */
 	public void start() {
-		init();
-		processer.start();
-		client.autoConnect();
+		loadProperties();
+		String allAddresses = System.getProperty("client.address");
+		String[] addresses = allAddresses.split(",");
+
+		for (final String address : addresses) {
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					start(address);
+				}
+			}, "MinaClient_Thread_" + address).start();
+		}
 	}
 
-	public void init() {
-		loadProperties();
+	/**
+	 * 单启一个server
+	 */
+	public void start(String server) {
 
-		client = new MinaClient("127.0.0.1:1234");
+		loadProperties();
+		MinaClient client = new MinaClient(server);
 
 		client.addHandler("1011", new Handler1011());
 		client.addHandler("1012", new Handler1012());
@@ -78,7 +86,9 @@ public class ClientModule {
 		client.addHandler("1001", new Handler1001());
 		client.addHandler("3012", new Handler3012());
 		client.addHandler("3014", new Handler3014());
-		processer = client.getProcesser();
+
+		client.getProcesser().start();
+		client.autoConnect();
 	}
 
 	public void loadProperties() {
@@ -106,6 +116,6 @@ public class ClientModule {
 
 	public static void main(String[] args) {
 		ClientModule module = new ClientModule();
-		module.start();
+		module.start("127.0.0.1:1234");
 	}
 }

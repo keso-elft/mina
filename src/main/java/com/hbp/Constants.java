@@ -16,6 +16,8 @@ public class Constants {
 
 	public final static String DATA_REPLY_CN = "9014";
 
+	public final static String DATA_RESULT_REPLY_CN = "9012";
+
 	// 收到立即回复消息格式
 	public final static String REPLY_REQUEST_PATTERN = "ST=91;CN=9011;PW=%s;MN=%s;Flag=%d;CP=&&QN=%s;QnRtn=%d&&";
 	public final static String REPLY_NOTIFICATION_PATTERN = "ST=91;CN=9013;PW=%s;MN=%s;CP=&&QN=%s&&";

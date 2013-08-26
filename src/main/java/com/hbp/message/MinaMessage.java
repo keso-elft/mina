@@ -34,6 +34,7 @@ public class MinaMessage implements Serializable {
 	public final static int TYPE_REQUEST = 1;
 	public final static int TYPE_NOTIFICATION = 2;
 	public final static int TYPE_DATA_REPLY = 3;
+	public final static int TYPE_RESULT_REPLY = 4;
 
 	/**
 	 * 消息参数
@@ -83,8 +84,12 @@ public class MinaMessage implements Serializable {
 					type = TYPE_NOTIFICATION;
 				}
 			}
-		} else if (getCN() != null && getCN().equals(Constants.DATA_REPLY_CN)) {
+		} else if (getCN() != null && getCN().equals(Constants.DATA_REPLY_CN)
+				&& !Constants.DATA_RESULT_REPLY_CN.equals(getCpPara("CN"))) {
 			type = TYPE_DATA_REPLY;
+		} else if (getCN() != null && getCN().equals(Constants.DATA_REPLY_CN)
+				&& Constants.DATA_RESULT_REPLY_CN.equals(getCpPara("CN"))) {
+			type = TYPE_RESULT_REPLY;
 		}
 	}
 

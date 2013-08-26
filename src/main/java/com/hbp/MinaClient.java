@@ -2,8 +2,10 @@
 
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -102,8 +104,14 @@ public class MinaClient {
 	String codec = "UTF-8";
 
 	/**
+	 * 消息缓存过期时间
+	 */
+	long msgTimeout = 3600 * 1000;
+
+	/**
 	 * 线程池配置
 	 */
+
 	int corePoolSize = 10;
 	int maximumPoolSize = 100;
 	int blockQueueCapacity = 65535;
@@ -113,6 +121,7 @@ public class MinaClient {
 		super();
 		this.server = server;
 		init();
+		new Thread(new CacheRecycleThread(), "CacheRecycleThread_" + server).start();
 	}
 
 	/**
@@ -213,6 +222,8 @@ public class MinaClient {
 		syncTimeOut = System.getProperty("client.sync.send.timeout") != null ? new Long(
 				System.getProperty("client.sync.send.timeout")) : syncTimeOut;
 		codec = System.getProperty("client.codec") != null ? System.getProperty("client.codec") : codec;
+		msgTimeout = System.getProperty("client.cache.timeout") != null ? new Long(
+				System.getProperty("client.cache.timeout")) : msgTimeout;
 	}
 
 	/**
@@ -272,6 +283,31 @@ public class MinaClient {
 		}
 
 		return ret;
+	}
+
+	/**
+	 * 回收数据应答的消息缓存进程
+	 */
+	public class CacheRecycleThread implements Runnable {
+
+		public void run() {
+
+			log.info("msg recycle thread start");
+			Set<String> QNs = hasReplyMsgMap.keySet();
+
+			try {
+				for (String qn : QNs) {
+					if (System.currentTimeMillis() > new SimpleDateFormat("yyyyMMddHHmmssSSS").parse(qn).getTime()
+							+ msgTimeout) {
+						hasReplyMsgMap.remove(qn);
+					}
+				}
+				Thread.sleep(msgTimeout);
+			} catch (Exception e) {
+				log.error("msg recycle failed : ", e);
+			}
+		}
+
 	}
 
 	public NioSocketConnector getSocketConnector() {

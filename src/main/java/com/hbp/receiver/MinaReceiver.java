@@ -4,6 +4,7 @@ import com.hbp.ClientModule;
 import com.hbp.Constants;
 import com.hbp.MinaClient;
 import com.hbp.handler.Handler1072;
+import com.hbp.manager.PasswordManager;
 import com.hbp.message.MinaMessage;
 
 public class MinaReceiver {
@@ -21,24 +22,30 @@ public class MinaReceiver {
 	public MinaMessage replyMsg(MinaMessage in) {
 
 		MinaMessage rtnMsg = null;
+		
+		// 获取密码
+		String pass = System.getProperty("system.password." + in.getMN());
+		if (pass == null) {
+			pass = PasswordManager.getPassword(in.getMN());
+			System.setProperty("system.password." + in.getMN(), pass);
+		}
 
 		if (in.isRequest()) {
 
 			// 确定回复的QnRtn
 			int qnRtn = Constants.QN_SUCCESS;
 
-			if (!in.getPW().equals(System.getProperty("system.password"))) {
+			if (!in.getPW().equals(pass)) {
 				qnRtn = Constants.QN_WRONG_PASS;
 			}
 			if (in.getQN() == null || in.getMN() == null || in.getCN() == null || client == null
 					|| client.getHandler(in.getCN()) == null)
 				qnRtn = Constants.QN_DENY;
 
-			// TODO 确定回复的FLAG
 			int rtnFlag = 0;
-			// TODO 测试用
+			// 需要数据应答或分包的命令
 			if (in.getCN().equals("2051"))
-				rtnFlag = 3;
+				rtnFlag = Integer.valueOf(System.getProperty("client.flag.model"));
 
 			in.setRtnFlag(rtnFlag);
 
@@ -63,13 +70,11 @@ public class MinaReceiver {
 			if (sourceMsg != null) {
 				rtnMsg = new MinaMessage(String.format(Constants.REPLY_DATA_REPLY_PATTERN, sourceMsg.getPW(),
 						sourceMsg.getMN(), sourceMsg.getQN(), exeRtn));
-				// TODO 删除缓存数据
-				client.removeHasReplyMsg(QN);
 			} else {
 				exeRtn = Constants.EXE_NO_DATA;
-				rtnMsg = new MinaMessage(String.format(Constants.REPLY_DATA_REPLY_PATTERN,
-						System.getProperty("system.password"), "", QN, exeRtn));
+				rtnMsg = new MinaMessage(String.format(Constants.REPLY_DATA_REPLY_PATTERN, pass, "", QN, exeRtn));
 			}
+			// TODO 未删除缓存数据
 		}
 
 		return rtnMsg;

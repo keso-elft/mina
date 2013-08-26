@@ -32,8 +32,8 @@ public class MinaClientHandlerAdapter extends IoHandlerAdapter {
 
 			try {
 				MinaMessage resp = this.replyMsg(msg);
-				if (msg.getRtnFlag() == 1 || msg.getRtnFlag() == 3) {
-					// TODO 分包的应答消息判断
+				// 需应答的消息需要缓存起来
+				if (msg.getRtnFlag() % 2 == 1) {
 					minaClient.putHasReplyMsg(msg);
 				}
 				if (resp != null && session.isConnected()) {

@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.hbp.Constants;
+import com.hbp.manager.PasswordManager;
 import com.hbp.message.MinaMessage;
 
 /**
@@ -26,7 +27,7 @@ public class Handler1072 implements MinaHandler {
 
 		// service
 		String newPass = in.getCpPara("PW");
-		int exeRtn = setPassword(newPass);
+		int exeRtn = PasswordManager.setPassword(in.getMN(), newPass);
 
 		// exeRtnMsg
 		String outCpContent = String.format(EXE_RTN_CP_PATTERN, in.getQN(), exeRtn);
@@ -35,28 +36,6 @@ public class Handler1072 implements MinaHandler {
 		result.add(exeRtnMsg);
 
 		return result;
-	}
-
-	/**
-	 * TODO 设置密码
-	 */
-	private int setPassword(String newPass) {
-		int exeRtn = Constants.EXE_SUCCESS;
-
-		try {
-			// TODO file save 在这里还是在结束时
-			// String fileName = "../system.properties";
-			// FileChannel channel = new RandomAccessFile(fileName,
-			// "rw").getChannel();
-			// FileLock lock = channel.lock();
-
-			System.setProperty("system.password", newPass);
-
-		} catch (Exception e) {
-			exeRtn = Constants.EXE_FAIL;
-			log.error("change password failure!", e);
-		}
-		return exeRtn;
 	}
 
 	public static void main(String[] args) {
