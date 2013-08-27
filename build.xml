@@ -8,21 +8,39 @@
 		</fileset>
 	</path>
 
-	<target name="prepare" description="prepare ">
+	<target name="prepare" description="prepare">
 		<mkdir dir="dist" />
+		<mkdir dir="dist/lib" />
+		<mkdir dir="dist/cfg" />
 	</target>
 
 	<target name="jar-client" description="jar-client">
 		<delete dir="dist/tmp" />
 		<mkdir dir="dist/tmp" />
-		<delete file="dist/clientModule.jar" />
-		<javac srcdir="src/main/java" source="1.6" target="1.6" encoding="UTF-8" includes="com/hbp/*.*" debug="true" fork="yes" destdir="dist/tmp" classpathref="classpath"  />
-		<copy todir="dist/tmp">
-			<fileset dir="src/main/resources" includes="**/*.xml" excludes="**/*.java">
+		<delete file="dist/lib/ClientModule.jar" />
+		<javac srcdir="src/main/java" source="1.6" target="1.6" encoding="UTF-8" includes="com/hbp/*.*" debug="true" fork="yes" destdir="dist/tmp" classpathref="classpath" />
+		<copy todir="dist/cfg">
+			<fileset dir="src/main/resources" includes="**/*.properties">
 			</fileset>
 		</copy>
-		<jar destfile="dist/clientModule.jar" update="true">
+		<copy todir="dist/tmp">
+			<fileset dir="src/main/resources" includes="**/*.xml">
+			</fileset>
+		</copy>
+		<copy todir="dist/lib">
+			<fileset dir="lib" includes="**/*.*">
+			</fileset>
+		</copy>
+		<pathconvert property="mf.classpath" pathsep=" ">
+			<path refid="classpath" />
+			<flattenmapper />
+		</pathconvert>
+		<jar destfile="dist/lib/ClientModule.jar" update="true">
 			<fileset dir="dist/tmp" includes="**/*.*" />
+			<manifest>
+				<attribute name="Main-Class" value="com.hbp.ClientModule" />
+				<attribute name="Class-Path" value="${mf.classpath} cfg/system.properties cfg/log4j" />
+			</manifest>
 		</jar>
 	</target>
 

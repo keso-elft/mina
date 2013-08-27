@@ -94,11 +94,11 @@ public class ClientModule {
 	public void loadProperties() {
 		Properties prop = System.getProperties();
 		try {
-			String fileName = "../system.properties";
+			String fileName = "system.properties";
 			File file = new File(fileName);
 
 			if (!file.exists()) {
-				fileName = "system.properties";
+				fileName = "cfg/system.properties";
 				file = new File(fileName);
 				if (!file.exists()) {
 					URL url = Thread.currentThread().getContextClassLoader().getResource("system.properties");
