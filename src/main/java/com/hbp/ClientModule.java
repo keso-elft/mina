@@ -3,10 +3,13 @@ package com.hbp;
 import java.io.File;
 import java.io.FileInputStream;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import com.hbp.handler.Handler1000;
 import com.hbp.handler.Handler1001;
@@ -31,36 +34,48 @@ import com.hbp.handler.Handler2072;
 import com.hbp.handler.Handler3011;
 import com.hbp.handler.Handler3012;
 import com.hbp.handler.Handler3014;
+import com.hbp.util.ClientUtil;
 
 public class ClientModule {
 
 	protected Logger log = LoggerFactory.getLogger(ClientModule.class);
 
+	protected ApplicationContext context;
+	
 	/**
 	 * 按照列表,多server启动
 	 */
 	public void start() {
-		loadProperties();
-		String allAddresses = System.getProperty("client.address");
-		String[] addresses = allAddresses.split(",");
+		Charset defaultCharset = java.nio.charset.Charset.defaultCharset();
+		System.out.println(defaultCharset.name());
+		try {
+			loadProperties();
+			context = new ClassPathXmlApplicationContext(new String[] {
+					"applicationContext-resources.xml",
+					"applicationContext-hibernate.xml",
+					"applicationContext-task.xml"
+				});
 
-		for (final String address : addresses) {
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					start(address);
-				}
-			}, "MinaClient_Thread_" + address).start();
+			log.info("client init ...");
+			String allAddresses = System.getProperty("client.address");
+			String[] addresses = allAddresses.split(",");
+
+			for (String address : addresses) {
+				start(address);
+			}
+			log.info("all the clients start ...");
+
+		} catch (Exception e) {
+			log.error("module started error:" + e.getMessage(), e);
 		}
 	}
 
 	/**
-	 * 单启一个server
+	 * 单启一个client
 	 */
-	public void start(String server) {
+	public void start(String address) {
 
-		loadProperties();
-		MinaClient client = new MinaClient(server);
+		MinaClient client = new MinaClient(address);
 
 		client.addHandler("1011", new Handler1011());
 		client.addHandler("1012", new Handler1012());
@@ -87,8 +102,8 @@ public class ClientModule {
 		client.addHandler("3012", new Handler3012());
 		client.addHandler("3014", new Handler3014());
 
-		client.getProcesser().start();
-		client.autoConnect();
+		client.run();
+		ClientUtil.addClient(client);
 	}
 
 	public void loadProperties() {

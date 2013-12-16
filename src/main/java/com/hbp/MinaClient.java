@@ -6,11 +6,6 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.mina.core.future.ConnectFuture;
 import org.apache.mina.core.service.IoHandler;
@@ -18,7 +13,6 @@ import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.codec.textline.LineDelimiter;
 import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
-import org.apache.mina.filter.executor.ExecutorFilter;
 import org.apache.mina.transport.socket.nio.NioSocketConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +24,7 @@ import com.hbp.receiver.MinaReceiver;
 /**
  * 客户端连接类
  */
-public class MinaClient {
+public class MinaClient extends Thread{
 
 	protected Logger log = LoggerFactory.getLogger(MinaClient.class);
 
@@ -112,25 +106,42 @@ public class MinaClient {
 	 * 线程池配置
 	 */
 
-	int corePoolSize = 10;
-	int maximumPoolSize = 100;
-	int blockQueueCapacity = 65535;
-	long keepAliveTime = 60;
+//	int corePoolSize = 10;
+//	int maximumPoolSize = 100;
+//	int blockQueueCapacity = 65535;
+//	long keepAliveTime = 60;
 
 	public MinaClient(String server) {
 		super();
 		this.server = server;
 		init();
-		new Thread(new CacheRecycleThread(), "CacheRecycleThread_" + server).start();
+	}
+
+	public void run() {
+		setName("MinaSession@" + server);
+		log.info(getName() + " start");
+
+		// 数据应答消息缓存清理进程
+		Thread cacheRecycleThread = new Thread(new CacheRecycleRunnable(), "CacheRecycleThread_" + server);
+		cacheRecycleThread.setDaemon(true);
+		cacheRecycleThread.start();
+		log.info("cacheRecycleThread@" + server + " start");
+
+		// 数据应答处理进程
+		Thread clientProcessThread = new Thread(processer, "ClientProcessThread_" + server);
+		clientProcessThread.setDaemon(true);
+		clientProcessThread.start();
+		log.info("clientProcessThread@" + server + " start");
+
+		// 自动重连
+		autoConnect();
+		log.info("connect finish@" + server);
 	}
 
 	/**
 	 * 自动重连
 	 */
 	public void autoConnect() {
-		Thread.currentThread().setName("MinaSession@" + server);
-		log.info(Thread.currentThread().getName() + " start");
-
 		while (true) {
 			if (serverIsRunning)
 				break;
@@ -183,14 +194,14 @@ public class MinaClient {
 				"codec",
 				new ProtocolCodecFilter(new TextLineCodecFactory(Charset.forName(codec), LineDelimiter.WINDOWS
 						.getValue(), LineDelimiter.WINDOWS.getValue())));
-		Executor executor = null;
-		if (isNewCachedThreadPool == true) {
-			executor = Executors.newCachedThreadPool();
-		} else {
-			executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, TimeUnit.SECONDS,
-					new LinkedBlockingQueue<Runnable>(blockQueueCapacity));
-		}
-		socketConnector.getFilterChain().addLast("threadPool-client", new ExecutorFilter(executor));
+//		Executor executor = null;
+//		if (isNewCachedThreadPool == true) {
+//			executor = Executors.newCachedThreadPool();
+//		} else {
+//			executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, TimeUnit.SECONDS,
+//					new LinkedBlockingQueue<Runnable>(blockQueueCapacity));
+//		}
+//		socketConnector.getFilterChain().addLast("threadPool-client", new ExecutorFilter(executor));
 
 		// 添加业务处理适配器
 		IoHandler handler = new MinaClientHandlerAdapter(this);
@@ -226,6 +237,29 @@ public class MinaClient {
 				System.getProperty("client.cache.timeout")) : msgTimeout;
 	}
 
+	/**
+	 * 异步发送
+	 * 
+	 * @param message
+	 * @return
+	 */
+	public boolean send(String message) {
+		if (message == null || message.isEmpty())
+			return false;
+
+		// 如果session已关闭, 进行一次重连,为避免递归等待,只重试一次.
+		if (ioSession == null || ioSession.isClosing()) {
+			initConnect();
+		}
+		if (ioSession != null) {
+			ioSession.write(message);
+			return true;
+		} else {
+			log.error("--->!!! reconnect server fail@");
+			return false;
+		}
+	}
+	
 	/**
 	 * 异步发送
 	 * 
@@ -288,13 +322,10 @@ public class MinaClient {
 	/**
 	 * 回收数据应答的消息缓存进程
 	 */
-	public class CacheRecycleThread implements Runnable {
-
+	public class CacheRecycleRunnable implements Runnable {
 		public void run() {
-
 			log.info("msg recycle thread start");
 			Set<String> QNs = hasReplyMsgMap.keySet();
-
 			try {
 				for (String qn : QNs) {
 					if (System.currentTimeMillis() > new SimpleDateFormat("yyyyMMddHHmmssSSS").parse(qn).getTime()
@@ -307,7 +338,6 @@ public class MinaClient {
 				log.error("msg recycle failed : ", e);
 			}
 		}
-
 	}
 
 	public NioSocketConnector getSocketConnector() {
@@ -398,37 +428,37 @@ public class MinaClient {
 		this.syncTimeOut = syncTimeOut;
 	}
 
-	public int getCorePoolSize() {
-		return corePoolSize;
-	}
-
-	public void setCorePoolSize(int corePoolSize) {
-		this.corePoolSize = corePoolSize;
-	}
-
-	public int getMaximumPoolSize() {
-		return maximumPoolSize;
-	}
-
-	public void setMaximumPoolSize(int maximumPoolSize) {
-		this.maximumPoolSize = maximumPoolSize;
-	}
-
-	public int getBlockQueueCapacity() {
-		return blockQueueCapacity;
-	}
-
-	public void setBlockQueueCapacity(int blockQueueCapacity) {
-		this.blockQueueCapacity = blockQueueCapacity;
-	}
-
-	public long getKeepAliveTime() {
-		return keepAliveTime;
-	}
-
-	public void setKeepAliveTime(long keepAliveTime) {
-		this.keepAliveTime = keepAliveTime;
-	}
+//	public int getCorePoolSize() {
+//		return corePoolSize;
+//	}
+//
+//	public void setCorePoolSize(int corePoolSize) {
+//		this.corePoolSize = corePoolSize;
+//	}
+//
+//	public int getMaximumPoolSize() {
+//		return maximumPoolSize;
+//	}
+//
+//	public void setMaximumPoolSize(int maximumPoolSize) {
+//		this.maximumPoolSize = maximumPoolSize;
+//	}
+//
+//	public int getBlockQueueCapacity() {
+//		return blockQueueCapacity;
+//	}
+//
+//	public void setBlockQueueCapacity(int blockQueueCapacity) {
+//		this.blockQueueCapacity = blockQueueCapacity;
+//	}
+//
+//	public long getKeepAliveTime() {
+//		return keepAliveTime;
+//	}
+//
+//	public void setKeepAliveTime(long keepAliveTime) {
+//		this.keepAliveTime = keepAliveTime;
+//	}
 
 	public String getCodec() {
 		return codec;

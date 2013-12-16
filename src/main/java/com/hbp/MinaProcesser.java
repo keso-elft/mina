@@ -11,7 +11,8 @@ import org.apache.log4j.Logger;
 import com.hbp.handler.MinaHandler;
 import com.hbp.message.MinaMessage;
 
-public class MinaProcesser {
+public class MinaProcesser implements Runnable{
+
 	protected static Logger log = LogManager.getLogger(MinaProcesser.class);
 
 	private BlockingQueue<MinaMessage> cache = new ArrayBlockingQueue<MinaMessage>(1000);
@@ -29,30 +30,20 @@ public class MinaProcesser {
 		return cache.offer(obj);
 	}
 
-	public void start() {
-		if (!isStop) {
+	public void run() {
+		while (!isStop) {
 			try {
-				new Thread() {
-					public void run() {
-						while (true) {
-							try {
-								MinaMessage msg = (MinaMessage) cache.take();
-								if (msg == null)
-									continue;
-								log.info("本地队列获取到msg:" + msg);
+				MinaMessage msg = (MinaMessage) cache.take();
+				if (msg == null)
+					continue;
+				log.info("本地队列获取到msg:" + msg);
 
-								List<MinaMessage> msgList = dispatch(msg);
-								for (MinaMessage rtnMsg : msgList) {
-									client.send(rtnMsg);
-								}
-							} catch (Throwable e) {
-								log.error("保存到数据库失败", e);
-							}
-						}
-					}
-				}.start();
-			} catch (Exception e) {
-				e.printStackTrace();
+				List<MinaMessage> msgList = dispatch(msg);
+				for (MinaMessage rtnMsg : msgList) {
+					client.send(rtnMsg);
+				}
+			} catch (Throwable e) {
+				log.error("[MinaProcesser]处理消息错误", e);
 			}
 		}
 	}
