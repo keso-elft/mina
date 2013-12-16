@@ -18,20 +18,27 @@ public class DataReportTask {
 
 	public void run() {
 
-		log.info("DataReportTask run ...");
-
 		@SuppressWarnings("unchecked")
 		List<MsgToSend> msgList = msgToSendDao.getMsgToSend();
 		if (msgList != null) {
+
+			log.info("new msg count: " + msgList.size());
+			int count = 0;
+
 			for (MsgToSend msg : msgList) {
 				MinaClient client = ClientUtil.getClient(msg.getAddress());
-				if (client != null && client.send(msg.getMsg())) {
-					msgToSendDao.delete(msg);
+				if (client != null) {
+					if (client.send(msg.getMsg())) {
+						msgToSendDao.delete(msg);
+						count++;
+						log.debug("send msg [" + msg.getMsg() + "] success @ " + msg.getAddress());
+					}
+				} else {
+					log.error("address not found @" + msg.getAddress());
 				}
 			}
+			log.info("send msg count: " + count);
 		}
-
-		log.info("DataReportTask finish ...");
 	}
 
 	public void setMsgToSendDao(MsgToSendDao msgToSendDao) {

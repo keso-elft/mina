@@ -98,7 +98,7 @@ public class MinaClientHandlerAdapter extends IoHandlerAdapter {
 	public void sessionClosed(IoSession session) throws Exception {
 		minaClient.setServerIsRunning(false);
 		minaClient.autoConnect();
-		log.info("connection close : " + session.getRemoteAddress());
+		log.error("connection close : " + session.getRemoteAddress());
 	}
 
 	public void sessionIdle(IoSession session, IdleStatus status) throws Exception {

@@ -142,21 +142,26 @@ public class MinaClient extends Thread{
 	 * 自动重连
 	 */
 	public void autoConnect() {
-		while (true) {
-			if (serverIsRunning)
-				break;
-			try {
-				initConnect();
-			} catch (Exception e) {
-				log.error("reconnect failure!");
+		new Thread(new Runnable() {
+			public void run() {
+				while (true) {
+					if (serverIsRunning) {
+						break;
+					}
+					try {
+						initConnect();
+					} catch (Exception e) {
+						log.error("reconnect failure!");
+					}
+				}
 			}
-		}
+		}).start();
 	}
 
 	/**
 	 * 建立连接,确保一段时间只重连一次(默认为1分钟)
 	 */
-	public void initConnect() {
+	private void initConnect() {
 		close();
 		long now = System.currentTimeMillis();
 		// 一分钟内，只重试一次连接
@@ -247,15 +252,14 @@ public class MinaClient extends Thread{
 		if (message == null || message.isEmpty())
 			return false;
 
-		// 如果session已关闭, 进行一次重连,为避免递归等待,只重试一次.
+		// 如果session已关闭, 避免递归等待,不重试
 		if (ioSession == null || ioSession.isClosing()) {
-			initConnect();
 		}
 		if (ioSession != null) {
 			ioSession.write(message);
 			return true;
 		} else {
-			log.error("--->!!! reconnect server fail@");
+			log.error("--->!!! not connected@" + server);
 			return false;
 		}
 	}
@@ -270,15 +274,14 @@ public class MinaClient extends Thread{
 		if (message == null)
 			return false;
 
-		// 如果session已关闭, 进行一次重连,为避免递归等待,只重试一次.
+		// 如果session已关闭, 避免递归等待,不重试
 		if (ioSession == null || ioSession.isClosing()) {
-			initConnect();
 		}
 		if (ioSession != null) {
 			ioSession.write(message);
 			return true;
 		} else {
-			log.error("--->!!! reconnect server fail@");
+			log.error("--->!!! not connected@" + server);
 			return false;
 		}
 	}
